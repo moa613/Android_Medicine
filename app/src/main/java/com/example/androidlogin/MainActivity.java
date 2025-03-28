@@ -1,13 +1,14 @@
-package com.example.androidlogin;
+package com.example.androidlogin;  // 패키지명: 현재 앱의 기본 패키지 (폴더 경로와 비슷한 개념)
 
-import android.content.Intent;
-import android.os.Bundle;
-import android.util.Log;
-import android.util.Patterns;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageButton;
+//*import: 다른 패키지에 있는 class를 데려옴
+import android.content.Intent;  // 화면 전환을 위한 Intent 클래스
+import android.os.Bundle;  // 액티비티의 상태를 저장하고 복원하는 데 사용됨
+import android.util.Log;   // 로그를 출력하여 디버깅하는 데 사용됨
+import android.util.Patterns;   // 이메일 형식을 검증하는 데 사용됨
+import android.view.View;     // UI 요소를 클릭할 때 사용됨
+import android.widget.Button;     // 버튼 UI 요소를 사용하기 위한 클래스
+import android.widget.EditText;      // 이미지가 포함된 버튼
+import android.widget.ImageButton;     
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -38,22 +39,32 @@ import java.util.Arrays;
 import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
-    // 비밀번호 정규식
+    //*Pattern 클래스는 정규 표현식(Regex, Regular Expression) 을 다룰 때 사용하는 Java 내장 클래스임(특정한 문자열이 정해진 패턴(규칙)에 맞는지 검사)
+    // 비밀번호 정규식 (4~16자의 영문,숫자,특수문자 허용)
     Pattern PASSWORD_PATTERN = Pattern.compile("^[a-zA-Z0-9!@.#$%^&*?_~]{4,16}$");
 
-    // 파이어베이스 인증 객체 생성
+    //*Firebase에서 제공하는 사용자 인증 클래스이며 사용자의 로그인 정보(이메일, 구글 로그인, 페이스북 로그인 등)를 관리하는 역할을 함.
+    // 파이어베이스 인증 객체 생성(로그인,회원가입,로그아웃 등을 처리)
     private FirebaseAuth firebaseAuth;
 
+️    //* FirebaseAuth.getInstance() → Firebase의 로그인 관리 시스템을 가져옴.
+    //*.getCurrentUser() → 현재 로그인한 사용자가 있는지 확인하고 정보를 가져옴.️ 
+    //* FirebaseUser user → 사용자 정보를 user 변수에 저장
+    // 현재 로그인한 Firebase 사용자 정보를 저장하는 변수
     FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
-    // 작성한 이메일 값과 비밀번호 값과 이름 값을 저장할 객체 생성
+    // 사용자가 입력한 이메일과 비밀번호 입력칸
     private EditText editTextEmail;
     private EditText editTextPassword;
 
+    // 사용자가 입력한 이메일과 비밀번호를 저장할 변수
     private String email = "";
     private String password = "";
 
-    // 구글 로그인 객체 생성
+    // 구글 로그인 객체 생성->Google 로그인 클라이언트 객체
+    //*GoogleSignInClient 사용자가 Google 계정으로 로그인할 수 있게 도와주는 기능을 제공
+    //*mGoogleSignInClient는 GoogleSignInClient 객체를 저장할 변수
+    //*RC_SIGN_IN은 Google 로그인 요청을 구분하는 상수 값으로 사용됨, 9001은 로그인 요청 코드
     private GoogleSignInClient mGoogleSignInClient;
     private static final int RC_SIGN_IN = 9001;
 
@@ -63,22 +74,23 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        // 버튼을 누르면 메인화면으로 이동
+        // 뒤로 가기 버튼을 누르면 메인화면(MenuActivity)로 이동(현재 활동 종료->MenuActivity로 이동하려고 함)
         Intent intent = new Intent(getApplicationContext(), MenuActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
-        finish();
+        finish();  // 현재 액티비티 종료
         super.onBackPressed();
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_main);   // XML 레이아웃 설정
 
-        // 파이어베이스 인증 객체 선언
+        // Firebase 인증 객체 초기화
         firebaseAuth = FirebaseAuth.getInstance();
 
+        //* XML에서 이메일,비밀번호 입력칸 가져오기
         // id가 write_email인 editText에 대한 메서드 저장
         editTextEmail = findViewById(R.id.et_eamil);
         // id가 signup_password인 editText에 대한 메서드 저장
@@ -94,20 +106,31 @@ public class MainActivity extends AppCompatActivity {
         // 페이스북 로그인 버튼 생성
         mCallbackManager = CallbackManager.Factory.create();
 
+        // Facebook 로그인 버튼을 XML에서 찾아서 Java 객체로 가져옴
         btn_facebook_login = (LoginButton) findViewById(R.id.facebook_login_button);
+        // 사용자에게 요청할 권한을 설정(이메일과 공개 프로필 정보)
         btn_facebook_login.setReadPermissions(Arrays.asList("public_profile", "email"));
+        // Facebook 로그인 버튼에 대한 콜백 함수를 등록
         btn_facebook_login.registerCallback(mCallbackManager, new FacebookCallback<LoginResult>() {
+            //로그인 성공 시 호출되는 메서드
             @Override
             public void onSuccess(LoginResult loginResult) {
+                //로그인 성공 메시지를 로그에 출력
                 Log.e("페이스북 로그인", "facebook:onSuccess:" + loginResult);
+
+                //로그인 성공 후 Facebook의 엑세스 토큰을 이용하여 Firebase 인증 처리
                 handleFacebookAccessToken(loginResult.getAccessToken());
             }
+            //사용자가 로그인 취소했을때 호출되는 메서드
             @Override
             public void onCancel() {
+                //로그인 취소 메시지를 로그에 출력
                 Log.e("페이스북 로그인", "facebook:onCancel");
             }
+            //로그인 중 오류가 발생했을 때 호출되는 메서드
             @Override
             public void onError(FacebookException error) {
+                // 오류 메시지를 로그에 출력력
                 Log.d("페이스북 로그인", "facebook:onError", error);
             }
         });
@@ -216,20 +239,28 @@ public class MainActivity extends AppCompatActivity {
 
     // 파이어베이스와 구글 로그인 연결
     private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
+        //디버깅을 위해 로그 출력(구글 로그인 시작)
         Log.e("구글 로그인","파이어베이스랑 연결 중");
         // 파이어베이스로 받은 구글 사용자가 확인된 이용자의 값을 토큰으로 받음
         AuthCredential credential = GoogleAuthProvider.getCredential(acct.getIdToken(), null);
+        //Firebase 인증 객체(firebaseAuth)를 사용하여 구글 로그인 정보를 Firebase에 넘겨줌
         firebaseAuth.signInWithCredential(credential)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
+                        //로그인 성공 여부 확인
                         if (task.isSuccessful()) {
                             // 로그인에 성공하면 "로그인 성공" 토스트를 보여줌
                             Toast.makeText(MainActivity.this, R.string.success_login, Toast.LENGTH_SHORT).show();
+                            //현재 로그인한 사용자 정보를 가져옴
                             FirebaseUser user = firebaseAuth.getCurrentUser();
+                            //로그인 성공 후 MenuActivity로 이동하기 위한 Intent 생성
                             Intent intent = new Intent(getApplicationContext(), MenuActivity.class);
+                            //새로운 화면을 띄울때 기존 액티비티를 정리하고 새 직업(Task)로 시작
                             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                            //MenuActivity 실행(로그인 후 이동)
                             startActivity(intent);
+                            //현재 액티비티(MainActivity) 종료 (뒤로 가기로 돌아올 수 없게 만듦)
                             finish();
                         } else {
                             // 로그인에 실패하면 "로그인 실패" 토스트를 보여줌
